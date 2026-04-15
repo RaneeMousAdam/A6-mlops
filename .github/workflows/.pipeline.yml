@@ -1,0 +1,32 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run linter
+        run: echo "linter running"
+  train:
+    needs: linter
+    if: github.ref == 'refs/heads/master' && contains(github.event.head_commit.message, '[run-train]')
+    runs-on: ubuntu-latest
+    steps:
+      - name: run training
+        run: echo "train running"
+      - name: handle failure
+        if: failure()
+        run: echo "Error logs" > error_logs.txt
+      - name: upload logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-logs
+          path: error_logs.txt
+      - name: cleanup logs
+        if: always()
+        run: echo "cleaning up logs"
